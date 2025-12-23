@@ -1,0 +1,7 @@
+{
+  "name": "AudioLink FX Pro",
+  "description": "Professional real-time audio effects processor with Virtual Cable routing capabilities.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
