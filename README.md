@@ -1,19 +1,35 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# AudioLink FX Pro
 
-# Run and deploy your AI Studio app
+Real-time audio effects processor with virtual cable routing and a hardware-inspired UI.
 
-This contains everything you need to run your app locally.
+## Highlights
 
-View your app in AI Studio: https://ai.studio/apps/drive/1gGhgbwEbXmYzahiWeibaIMHYwfCkdUXk
+- Low-latency Web Audio graph (input gain, delay, reverb, master gain)
+- Live spectrum visualizer + input/output meters
+- Device routing for input/output selection
+- Fully static build, ready for CDN hosting
 
-## Run Locally
+## Tech Stack
 
-**Prerequisites:**  Node.js
+- React + TypeScript (Vite)
+- Web Audio API
+- Tailwind CSS
 
+## Local Setup
 
 1. Install dependencies:
    `npm install`
-2. Run the app:
+2. Start dev server:
    `npm run dev`
+
+## Build
+
+`npm run build`
+
+Output is generated in `dist/`.
+
+
+## Notes
+
+- The app requests microphone access for audio input.
+- No server or external API calls are required.
