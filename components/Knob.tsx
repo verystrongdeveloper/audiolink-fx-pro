@@ -39,12 +39,18 @@ const Knob: React.FC<KnobProps> = ({ label, value, min, max, onChange, format, c
     document.body.style.cursor = 'ns-resize';
   };
 
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (isEditing) return;
+    setIsDragging(true);
+    startY.current = e.touches[0].clientY;
+    startValue.current = value;
+  };
+
   useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
+    const handleMove = (clientY: number) => {
       if (!isDragging) return;
-      e.preventDefault();
       
-      const deltaY = startY.current - e.clientY;
+      const deltaY = startY.current - clientY;
       const range = max - min;
       // Sensitivity factor
       const change = (deltaY / 200) * range;
@@ -55,19 +61,36 @@ const Knob: React.FC<KnobProps> = ({ label, value, min, max, onChange, format, c
       onChange(newValue);
     };
 
-    const handleMouseUp = () => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isDragging) return;
+      e.preventDefault();
+      handleMove(e.clientY);
+    };
+
+    const handleTouchMove = (e: TouchEvent) => {
+      if (!isDragging) return;
+      // Prevent scrolling while adjusting knob
+      if (e.cancelable) e.preventDefault();
+      handleMove(e.touches[0].clientY);
+    };
+
+    const handleEnd = () => {
       setIsDragging(false);
       document.body.style.cursor = 'default';
     };
 
     if (isDragging) {
-      window.addEventListener('mousemove', handleMouseMove);
-      window.addEventListener('mouseup', handleMouseUp);
+      window.addEventListener('mousemove', handleMouseMove, { passive: false });
+      window.addEventListener('mouseup', handleEnd);
+      window.addEventListener('touchmove', handleTouchMove, { passive: false });
+      window.addEventListener('touchend', handleEnd);
     }
 
     return () => {
       window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseup', handleMouseUp);
+      window.removeEventListener('mouseup', handleEnd);
+      window.removeEventListener('touchmove', handleTouchMove);
+      window.removeEventListener('touchend', handleEnd);
     };
   }, [isDragging, max, min, onChange]);
 
@@ -125,8 +148,9 @@ const Knob: React.FC<KnobProps> = ({ label, value, min, max, onChange, format, c
     <div className="flex flex-col items-center justify-center space-y-3 select-none group relative">
       <div 
         ref={knobRef}
-        className="relative w-24 h-24 cursor-ns-resize"
+        className="relative w-24 h-24 cursor-ns-resize touch-none"
         onMouseDown={handleMouseDown}
+        onTouchStart={handleTouchStart}
       >
         <svg 
           width="100%" 
