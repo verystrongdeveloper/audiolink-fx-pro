@@ -125,7 +125,14 @@ const App: React.FC = () => {
 
   const handleStartEngine = async () => {
     try {
-      await navigator.mediaDevices.getUserMedia({ audio: true });
+      // Ask for permission with processing disabled early to minimize starting latency
+      await navigator.mediaDevices.getUserMedia({ 
+        audio: { 
+          echoCancellation: false, 
+          noiseSuppression: false, 
+          autoGainControl: false 
+        } 
+      });
       await audioEngine.init();
       
       // Fix: Apply current parameters immediately before resuming to prevent default value spikes

@@ -39,10 +39,9 @@ class AudioEngine {
   async init() {
     if (this.isInitialized) return;
 
-    // 디스코드 및 윈도우 표준인 48kHz로 고정하여 드라이버 충돌 방지
+    // Use hardware native sample rate to avoid software resampling latency
     this.context = new AudioContext({
       latencyHint: 'interactive',
-      sampleRate: 48000,
     });
 
     // --- Critical Fix: Start all gains at 0 to prevent startup pop/noise ---
@@ -80,10 +79,10 @@ class AudioEngine {
 
     this.destinationNode = this.context.createMediaStreamDestination();
 
-    // Secondary AudioContext for Monitoring (to bypass HTMLAudioElement latency)
+    // Secondary AudioContext for Monitoring with same hardware rate
     this.monitorContext = new AudioContext({
       latencyHint: 'interactive',
-      sampleRate: 48000,
+      sampleRate: this.context.sampleRate,
     });
     this.monitorGain = this.monitorContext.createGain();
     this.monitorGain.connect(this.monitorContext.destination);
