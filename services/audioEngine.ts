@@ -40,6 +40,12 @@ class AudioEngine {
     // --- Critical Fix: Start all gains at 0 to prevent startup pop/noise ---
     this.inputGain = this.context.createGain();
     this.inputGain.gain.value = 0; 
+    
+    // Stereo to Mono summing: force 1 channel to sum L+R and apply -6dB (0.5x gain)
+    // Web Audio default downmix for 'speakers' interpretation is (L+R)/2
+    this.inputGain.channelCount = 1;
+    this.inputGain.channelCountMode = 'explicit';
+    this.inputGain.channelInterpretation = 'speakers';
 
     this.masterGain = this.context.createGain();
     this.masterGain.gain.value = 0; 
