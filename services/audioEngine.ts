@@ -18,6 +18,7 @@ class AudioEngine {
 
   private destinationNode: MediaStreamAudioDestinationNode | null = null;
   private outputAudioElement: AudioOutputElement | null = null;
+  private monitorAudioElement: AudioOutputElement | null = null;
 
   private isInitialized = false;
 
@@ -26,6 +27,10 @@ class AudioEngine {
     this.outputAudioElement.autoplay = true;
     // 일부 브라우저에서는 오디오 객체가 페이지에 연결되지 않으면 출력을 제한할 수 있음
     this.outputAudioElement.style.display = 'none';
+
+    this.monitorAudioElement = new Audio() as AudioOutputElement;
+    this.monitorAudioElement.autoplay = true;
+    this.monitorAudioElement.style.display = 'none';
   }
 
   async init() {
@@ -90,6 +95,7 @@ class AudioEngine {
     this.outputAnalyzer.connect(this.destinationNode);
 
     this.outputAudioElement!.srcObject = this.destinationNode.stream;
+    this.monitorAudioElement!.srcObject = this.destinationNode.stream;
     
     this.isInitialized = true;
   }
@@ -100,6 +106,9 @@ class AudioEngine {
     }
     if (this.outputAudioElement) {
       await this.outputAudioElement.play().catch(() => {});
+    }
+    if (this.monitorAudioElement) {
+      await this.monitorAudioElement.play().catch(() => {});
     }
   }
 
@@ -138,6 +147,25 @@ class AudioEngine {
       }
     } catch (e) {
       console.error("setSinkId failed", e);
+    }
+  }
+
+  async setMonitoringDevice(deviceId: string) {
+    if (!this.monitorAudioElement) return;
+    try {
+      if ('setSinkId' in this.monitorAudioElement) {
+        await this.monitorAudioElement.setSinkId(deviceId);
+        console.log(`Monitor routed to: ${deviceId}`);
+        await this.resume();
+      }
+    } catch (e) {
+      console.error("setSinkId failed for monitor", e);
+    }
+  }
+
+  setMonitoringEnabled(enabled: boolean) {
+    if (this.monitorAudioElement) {
+      this.monitorAudioElement.muted = !enabled;
     }
   }
 

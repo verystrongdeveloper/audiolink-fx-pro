@@ -13,6 +13,7 @@ export interface EffectParams {
   masterGain: number; // 0 to 2
   inputGain: number; // 0 to 2
   isMuted: boolean;
+  monitoringEnabled: boolean;
 }
 
 // Extend HTMLMediaElement to support setSinkId (experimental feature in some TS libs)

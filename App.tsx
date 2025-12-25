@@ -13,7 +13,8 @@ const DEFAULT_PARAMS: EffectParams = {
   delayTime: 0.3,
   delayFeedback: 0.3,
   delayMix: 0.0,
-  isMuted: false
+  isMuted: false,
+  monitoringEnabled: false
 };
 
 const STORAGE_KEY = 'audiolink_fx_params';
@@ -70,6 +71,9 @@ const App: React.FC = () => {
   const [selectedOutput, setSelectedOutput] = useState<string>(() => {
     return localStorage.getItem(`${DEVICE_STORAGE_KEY}_output`) || '';
   });
+  const [selectedMonitor, setSelectedMonitor] = useState<string>(() => {
+    return localStorage.getItem(`${DEVICE_STORAGE_KEY}_monitor`) || '';
+  });
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   // Save devices to localStorage when changed
@@ -80,6 +84,10 @@ const App: React.FC = () => {
   useEffect(() => {
     if (selectedOutput) localStorage.setItem(`${DEVICE_STORAGE_KEY}_output`, selectedOutput);
   }, [selectedOutput]);
+
+  useEffect(() => {
+    if (selectedMonitor) localStorage.setItem(`${DEVICE_STORAGE_KEY}_monitor`, selectedMonitor);
+  }, [selectedMonitor]);
   
   const [levels, setLevels] = useState({ input: 0, output: 0 });
   const [params, setParams] = useState<EffectParams>(() => {
@@ -109,6 +117,7 @@ const App: React.FC = () => {
       setOutputs(audioOutputs);
       if (audioInputs.length > 0 && !selectedInput) setSelectedInput(audioInputs[0].deviceId);
       if (audioOutputs.length > 0 && !selectedOutput) setSelectedOutput(audioOutputs[0].deviceId);
+      if (audioOutputs.length > 0 && !selectedMonitor) setSelectedMonitor(audioOutputs[0].deviceId);
     } catch (err) {
       console.error(err);
     }
@@ -158,6 +167,18 @@ const App: React.FC = () => {
       audioEngine.setOutputDevice(selectedOutput);
     }
   }, [selectedOutput, engineStarted]);
+
+  useEffect(() => {
+    if (selectedMonitor && engineStarted) {
+      audioEngine.setMonitoringDevice(selectedMonitor);
+    }
+  }, [selectedMonitor, engineStarted]);
+
+  useEffect(() => {
+    if (engineStarted) {
+      audioEngine.setMonitoringEnabled(params.monitoringEnabled);
+    }
+  }, [params.monitoringEnabled, engineStarted]);
 
   const updateParam = useCallback((key: keyof EffectParams, val: number | boolean) => {
     setParams(prev => {
@@ -267,6 +288,37 @@ const App: React.FC = () => {
                     {outputs.map(d => <option key={d.deviceId} value={d.deviceId}>{d.label}</option>)}
                   </select>
                 </div>
+              </div>
+
+              {/* Monitoring Section */}
+              <div className="space-y-3 pt-2">
+                <div className="flex items-center justify-between px-1">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                    <span className={`w-1.5 h-1.5 rounded-full transition-all ${params.monitoringEnabled ? 'bg-orange-500 shadow-[0_0_8px_#f97316]' : 'bg-slate-700'}`}></span>
+                    Monitoring
+                  </span>
+                  <button 
+                    onClick={() => updateParam('monitoringEnabled', !params.monitoringEnabled)}
+                    className={`relative inline-flex h-5 w-10 items-center rounded-full transition-colors focus:outline-none ${params.monitoringEnabled ? 'bg-orange-600' : 'bg-slate-700'}`}
+                  >
+                    <span className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${params.monitoringEnabled ? 'translate-x-6' : 'translate-x-1'}`} />
+                  </button>
+                </div>
+
+                {params.monitoringEnabled && (
+                  <div className="flex gap-4 items-center bg-orange-900/10 p-3 rounded border border-orange-900/30 animate-in fade-in slide-in-from-top-2 duration-300">
+                    <div className="flex-1 min-w-0">
+                      <label className="block text-[9px] text-orange-400 mb-1.5 font-bold uppercase tracking-wider">Monitor Device</label>
+                      <select 
+                        className="w-full bg-[#0a0a0a] border border-orange-900/50 rounded-sm px-2 py-2 text-xs focus:ring-1 focus:ring-orange-500 outline-none text-slate-300 font-mono truncate"
+                        value={selectedMonitor}
+                        onChange={(e) => setSelectedMonitor(e.target.value)}
+                      >
+                        {outputs.map(d => <option key={d.deviceId} value={d.deviceId}>{d.label}</option>)}
+                      </select>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
             
