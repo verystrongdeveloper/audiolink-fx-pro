@@ -101,7 +101,7 @@ const App: React.FC = () => {
     }
     return DEFAULT_PARAMS;
   });
-  const [lang, setLang] = useState<LangCode>('ko');
+  const [lang, setLang] = useState<LangCode>('en');
 
   // Save params to localStorage when changed
   useEffect(() => {
@@ -458,43 +458,59 @@ const App: React.FC = () => {
             <span className="text-[10px] text-slate-600 font-mono italic">Ad Slot Placeholder</span>
           </div>
 
-          {/* About & Technical Info (Added for AdSense "Content" requirement) */}
+          {/* About & Technical Info (Added for AdSense & SEO) */}
           <section className="bg-slate-900/40 border border-slate-800 p-8 rounded-sm text-slate-400 space-y-6 text-sm leading-relaxed font-sans">
             <div>
-              <h2 className="text-xl font-tech font-black text-white mb-4 uppercase tracking-tight italic">About AudioLink FX Pro</h2>
+              <h2 className="text-xl font-tech font-black text-white mb-4 uppercase tracking-tight italic">Professional Browser Audio DSP</h2>
               <p>
-                AudioLink FX Pro는 웹 브라우저 기반의 전문적인 실시간 오디오 DSP(Digital Signal Processing) 엔진입니다. 
-                이 도구는 마이크 입력을 실시간으로 가공하여 전 세계 어디에서나 전문적인 방송 품질의 오디오를 송출할 수 있도록 설계되었습니다. 
-                Web Audio API를 활용한 저지연(Low-latency) 처리 기술을 통해 하드웨어 장비 없이도 풍성한 리버브와 딜레이 효과를 경험할 수 있습니다.
+                AudioLink FX Pro is a high-performance, real-time audio Digital Signal Processing (DSP) engine built for the web. 
+                Designed for streamers, podcasters, and musicians, this tool allows you to process your microphone input with professional-grade effects 
+                directly in your browser with ultra-low latency. 
+                Using advanced Web Audio API techniques, we deliver studio-quality Reverb and Delay without the need for expensive hardware or complex software installations.
               </p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div className="space-y-3">
-                <h3 className="text-blue-400 font-bold uppercase text-xs tracking-widest">Key Features</h3>
+                <h3 className="text-blue-400 font-bold uppercase text-xs tracking-widest">Core Capabilities</h3>
                 <ul className="list-disc pl-5 space-y-2 text-[13px]">
-                  <li><b>Real-time DSP Engine:</b> 고성능 알고리즘을 통한 저지연 오디오 처리.</li>
-                  <li><b>Dual-Channel Monitoring:</b> 송출용 출력과 본인 확인용 모니터링 출력의 독립적 라우팅 지원.</li>
-                  <li><b>Pro FX Rack:</b> Plate Reverb와 Digital Delay 유닛을 통한 전문적인 공간감 부여.</li>
-                  <li><b>Browser Native Power:</b> 별도의 설치 없이 브라우저만으로 동작하는 가상 이펙터.</li>
+                  <li><b>Ultra-Low Latency DSP:</b> Optimized processing path for near-instant audio feedback.</li>
+                  <li><b>Dual-Channel Routing:</b> Independent control for main broadcast output and local monitoring.</li>
+                  <li><b>Studio FX Rack:</b> High-fidelity Plate Reverb and Digital Delay units.</li>
+                  <li><b>Zero Installation:</b> Pure browser-based power, compatible with Windows, Mac, and Linux.</li>
                 </ul>
               </div>
               <div className="space-y-3">
-                <h3 className="text-green-400 font-bold uppercase text-xs tracking-widest">Technical Specs</h3>
+                <h3 className="text-green-400 font-bold uppercase text-xs tracking-widest">Technical Excellence</h3>
                 <p className="text-[13px]">
-                  본 엔진은 48,000Hz 네이티브 샘플 레이트에서의 동작을 권장하며, 시스템의 오디오 지연을 최소화하기 위해 Direct Destination 라우팅 기법을 사용합니다. 
-                  모든 설정은 로컬 스토리지에 안전하게 암호화되어 저장되어 사용자 경험의 연속성을 보장합니다.
+                  Our engine synchronizes with your hardware's native sample rate to eliminate resampling overhead. 
+                  By utilizing Direct Destination routing, we bypass standard browser buffering to achieve the fastest possible response times. 
+                  Your settings are automatically persisted to local storage for a seamless experience across sessions.
                 </p>
               </div>
             </div>
 
-            <div className="pt-4 border-t border-slate-800">
-              <h3 className="text-slate-500 font-bold uppercase text-[11px] tracking-widest mb-2">Privacy & Policy</h3>
-              <p className="text-[11px] text-slate-500 italic">
-                AudioLink FX Pro는 어떠한 오디오 데이터도 서버로 전송하지 않습니다. 모든 처리는 사용자의 기기 내부(Client-side)에서만 이루어집니다. 
-                본 사이트는 광고 송출 및 분석을 위해 Google AdSense 및 관련 쿠키를 사용할 수 있습니다.
-              </p>
+            <div className="pt-4 border-t border-slate-800 flex flex-col md:flex-row justify-between gap-4">
+              <div className="max-w-xl">
+                <h3 className="text-slate-500 font-bold uppercase text-[11px] tracking-widest mb-2">Privacy & Local Processing</h3>
+                <p className="text-[11px] text-slate-500 italic">
+                  AudioLink FX Pro processes all audio locally on your machine. No audio data is ever sent to our servers. 
+                  This site uses Google AdSense and associated cookies for advertising and analytics purposes.
+                </p>
+              </div>
+              <div className="text-[11px] text-slate-600">
+                <p><b>AudioLink FX Pro</b> - The Ultimate Virtual Audio Rack</p>
+                <p>Built with Web Audio API & React</p>
+              </div>
             </div>
+
+            {/* Korean Translation (Folded/Secondary for SEO focus on English) */}
+            <details className="mt-4 pt-4 border-t border-slate-800/50 cursor-pointer">
+              <summary className="text-[10px] uppercase font-bold text-slate-600 hover:text-slate-400">한국어 설명 (Korean Info)</summary>
+              <div className="mt-4 text-[12px] space-y-2 opacity-70">
+                <p>AudioLink FX Pro는 브라우저 기반의 전문 실시간 오디오 처리 엔진입니다. 마이크 입력에 리버브와 딜레이를 지연 없이 적용하여 방송이나 녹음 품질을 높여줍니다.</p>
+              </div>
+            </details>
           </section>
 
           <footer className="flex justify-between items-center text-[9px] font-mono text-slate-600 border-t border-slate-900 pt-6 mt-4">
