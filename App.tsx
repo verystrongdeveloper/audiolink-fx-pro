@@ -199,6 +199,15 @@ const App: React.FC = () => {
     updateParam('isMuted', !params.isMuted);
   };
 
+  useEffect(() => {
+    try {
+      (window as any).adsbygoogle = (window as any).adsbygoogle || [];
+      (window as any).adsbygoogle.push({});
+    } catch (e) {
+      console.error("AdSense error", e);
+    }
+  }, []);
+
   if (!engineStarted) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#050505] text-white p-6 relative overflow-hidden">
@@ -436,6 +445,57 @@ const App: React.FC = () => {
                </div>
             </div>
           </div>
+
+          <div className="bg-[#131b2e] p-4 rounded-sm border border-slate-800 shadow-xl overflow-hidden min-h-[90px] flex items-center justify-center relative">
+            <div className="absolute top-1 left-2 text-[8px] font-bold text-slate-700 uppercase tracking-tighter">Advertisement</div>
+            {/* Google AdSense Unit */}
+            <ins className="adsbygoogle"
+                 style={{ display: 'block' }}
+                 data-ad-client="ca-pub-3082216745798697"
+                 data-ad-slot="YOUR_AD_SLOT_ID"
+                 data-ad-format="auto"
+                 data-full-width-responsive="true"></ins>
+            <span className="text-[10px] text-slate-600 font-mono italic">Ad Slot Placeholder</span>
+          </div>
+
+          {/* About & Technical Info (Added for AdSense "Content" requirement) */}
+          <section className="bg-slate-900/40 border border-slate-800 p-8 rounded-sm text-slate-400 space-y-6 text-sm leading-relaxed font-sans">
+            <div>
+              <h2 className="text-xl font-tech font-black text-white mb-4 uppercase tracking-tight italic">About AudioLink FX Pro</h2>
+              <p>
+                AudioLink FX Pro는 웹 브라우저 기반의 전문적인 실시간 오디오 DSP(Digital Signal Processing) 엔진입니다. 
+                이 도구는 마이크 입력을 실시간으로 가공하여 전 세계 어디에서나 전문적인 방송 품질의 오디오를 송출할 수 있도록 설계되었습니다. 
+                Web Audio API를 활용한 저지연(Low-latency) 처리 기술을 통해 하드웨어 장비 없이도 풍성한 리버브와 딜레이 효과를 경험할 수 있습니다.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="space-y-3">
+                <h3 className="text-blue-400 font-bold uppercase text-xs tracking-widest">Key Features</h3>
+                <ul className="list-disc pl-5 space-y-2 text-[13px]">
+                  <li><b>Real-time DSP Engine:</b> 고성능 알고리즘을 통한 저지연 오디오 처리.</li>
+                  <li><b>Dual-Channel Monitoring:</b> 송출용 출력과 본인 확인용 모니터링 출력의 독립적 라우팅 지원.</li>
+                  <li><b>Pro FX Rack:</b> Plate Reverb와 Digital Delay 유닛을 통한 전문적인 공간감 부여.</li>
+                  <li><b>Browser Native Power:</b> 별도의 설치 없이 브라우저만으로 동작하는 가상 이펙터.</li>
+                </ul>
+              </div>
+              <div className="space-y-3">
+                <h3 className="text-green-400 font-bold uppercase text-xs tracking-widest">Technical Specs</h3>
+                <p className="text-[13px]">
+                  본 엔진은 48,000Hz 네이티브 샘플 레이트에서의 동작을 권장하며, 시스템의 오디오 지연을 최소화하기 위해 Direct Destination 라우팅 기법을 사용합니다. 
+                  모든 설정은 로컬 스토리지에 안전하게 암호화되어 저장되어 사용자 경험의 연속성을 보장합니다.
+                </p>
+              </div>
+            </div>
+
+            <div className="pt-4 border-t border-slate-800">
+              <h3 className="text-slate-500 font-bold uppercase text-[11px] tracking-widest mb-2">Privacy & Policy</h3>
+              <p className="text-[11px] text-slate-500 italic">
+                AudioLink FX Pro는 어떠한 오디오 데이터도 서버로 전송하지 않습니다. 모든 처리는 사용자의 기기 내부(Client-side)에서만 이루어집니다. 
+                본 사이트는 광고 송출 및 분석을 위해 Google AdSense 및 관련 쿠키를 사용할 수 있습니다.
+              </p>
+            </div>
+          </section>
 
           <footer className="flex justify-between items-center text-[9px] font-mono text-slate-600 border-t border-slate-900 pt-6 mt-4">
              <div className="flex gap-4">
