@@ -2,8 +2,11 @@ import { EffectParams, AudioOutputElement } from '../types';
 
 class AudioEngine {
   public context: AudioContext | null = null;
+  public monitorContext: AudioContext | null = null;
   private inputStream: MediaStream | null = null;
   private sourceNode: MediaStreamAudioSourceNode | null = null;
+  private monitorSourceNode: MediaStreamAudioSourceNode | null = null;
+  private monitorGain: GainNode | null = null;
   
   private inputGain: GainNode | null = null;
   private masterGain: GainNode | null = null;
@@ -77,6 +80,18 @@ class AudioEngine {
 
     this.destinationNode = this.context.createMediaStreamDestination();
 
+    // Secondary AudioContext for Monitoring (to bypass HTMLAudioElement latency)
+    this.monitorContext = new AudioContext({
+      latencyHint: 'interactive',
+      sampleRate: 48000,
+    });
+    this.monitorGain = this.monitorContext.createGain();
+    this.monitorGain.connect(this.monitorContext.destination);
+    
+    // Connect Main DSP to Monitor Context
+    this.monitorSourceNode = this.monitorContext.createMediaStreamSource(this.destinationNode.stream);
+    this.monitorSourceNode.connect(this.monitorGain);
+
     // 연결 그래프
     this.inputGain.connect(this.inputAnalyzer);
     this.inputGain.connect(this.masterGain);
@@ -92,10 +107,18 @@ class AudioEngine {
     this.delayWetGain.connect(this.masterGain);
 
     this.masterGain.connect(this.outputAnalyzer);
+    
+    // Low Latency Path: Connect directly to hardware destination
+    this.outputAnalyzer.connect(this.context.destination);
+
+    // Legacy/Monitoring Path: Connect to MediaStream for secondary devices
     this.outputAnalyzer.connect(this.destinationNode);
 
     this.outputAudioElement!.srcObject = this.destinationNode.stream;
     this.monitorAudioElement!.srcObject = this.destinationNode.stream;
+    
+    // Mute the legacy output element if we're using direct destination
+    this.outputAudioElement!.muted = true; 
     
     this.isInitialized = true;
   }
@@ -104,11 +127,11 @@ class AudioEngine {
     if (this.context && this.context.state === 'suspended') {
       await this.context.resume();
     }
+    if (this.monitorContext && this.monitorContext.state === 'suspended') {
+      await this.monitorContext.resume();
+    }
     if (this.outputAudioElement) {
       await this.outputAudioElement.play().catch(() => {});
-    }
-    if (this.monitorAudioElement) {
-      await this.monitorAudioElement.play().catch(() => {});
     }
   }
 
@@ -138,32 +161,63 @@ class AudioEngine {
   }
 
   async setOutputDevice(deviceId: string) {
-    if (!this.outputAudioElement) return;
+    if (!this.context) return;
+    
     try {
-      if ('setSinkId' in this.outputAudioElement) {
-        await this.outputAudioElement.setSinkId(deviceId);
-        console.log(`Output routed to: ${deviceId}`);
-        await this.resume();
+      // 1. Try modern AudioContext.setSinkId (Lowest Latency)
+      if ('setSinkId' in this.context && typeof (this.context as any).setSinkId === 'function') {
+        await (this.context as any).setSinkId(deviceId);
+        console.log(`Main output (Context) routed to: ${deviceId}`);
+        this.outputAudioElement!.muted = true; // Ensure legacy element is silent
+        return;
+      }
+
+      // 2. Fallback to HTMLAudioElement (Legacy Latency)
+      if (this.outputAudioElement) {
+        this.outputAudioElement.muted = false; 
+        if ('setSinkId' in this.outputAudioElement) {
+          await this.outputAudioElement.setSinkId(deviceId);
+          console.log(`Main output (Legacy) routed to: ${deviceId}`);
+          await this.resume();
+        }
       }
     } catch (e) {
-      console.error("setSinkId failed", e);
+      console.error("setOutputDevice failed", e);
     }
   }
 
   async setMonitoringDevice(deviceId: string) {
-    if (!this.monitorAudioElement) return;
+    if (!this.monitorContext) return;
+    
     try {
-      if ('setSinkId' in this.monitorAudioElement) {
-        await this.monitorAudioElement.setSinkId(deviceId);
-        console.log(`Monitor routed to: ${deviceId}`);
-        await this.resume();
+      // 1. Try modern setSinkId on Monitor Context (Lowest Latency)
+      if ('setSinkId' in this.monitorContext && typeof (this.monitorContext as any).setSinkId === 'function') {
+        await (this.monitorContext as any).setSinkId(deviceId);
+        console.log(`Monitor routed (Direct Context) to: ${deviceId}`);
+        if (this.monitorAudioElement) this.monitorAudioElement.muted = true;
+        return;
+      }
+
+      // 2. Fallback to HTMLAudioElement
+      if (this.monitorAudioElement) {
+        this.monitorAudioElement.muted = false;
+        if ('setSinkId' in this.monitorAudioElement) {
+          await this.monitorAudioElement.setSinkId(deviceId);
+          console.log(`Monitor routed (Legacy Audio) to: ${deviceId}`);
+        }
       }
     } catch (e) {
-      console.error("setSinkId failed for monitor", e);
+      console.error("setMonitoringDevice failed", e);
     }
   }
 
   setMonitoringEnabled(enabled: boolean) {
+    if (this.monitorGain) {
+      // Use gain instead of HTMLAudioElement.muted for faster response
+      const now = this.monitorContext?.currentTime || 0;
+      this.monitorGain.gain.setTargetAtTime(enabled ? 1 : 0, now, 0.01);
+    }
+    
     if (this.monitorAudioElement) {
       this.monitorAudioElement.muted = !enabled;
     }
