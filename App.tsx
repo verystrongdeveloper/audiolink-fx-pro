@@ -16,6 +16,9 @@ const DEFAULT_PARAMS: EffectParams = {
   isMuted: false
 };
 
+const STORAGE_KEY = 'audiolink_fx_params';
+const DEVICE_STORAGE_KEY = 'audiolink_fx_devices';
+
 // Decorative Screw Component
 const Screw: React.FC<{ className?: string }> = ({ className }) => (
   <div className={`absolute w-3 h-3 rounded-full bg-slate-700 border border-slate-900 flex items-center justify-center screw-head ${className}`}>
@@ -61,13 +64,41 @@ const App: React.FC = () => {
   const [inputs, setInputs] = useState<AudioDevice[]>([]);
   const [outputs, setOutputs] = useState<AudioDevice[]>([]);
   
-  const [selectedInput, setSelectedInput] = useState<string>('');
-  const [selectedOutput, setSelectedOutput] = useState<string>('');
+  const [selectedInput, setSelectedInput] = useState<string>(() => {
+    return localStorage.getItem(`${DEVICE_STORAGE_KEY}_input`) || '';
+  });
+  const [selectedOutput, setSelectedOutput] = useState<string>(() => {
+    return localStorage.getItem(`${DEVICE_STORAGE_KEY}_output`) || '';
+  });
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  // Save devices to localStorage when changed
+  useEffect(() => {
+    if (selectedInput) localStorage.setItem(`${DEVICE_STORAGE_KEY}_input`, selectedInput);
+  }, [selectedInput]);
+
+  useEffect(() => {
+    if (selectedOutput) localStorage.setItem(`${DEVICE_STORAGE_KEY}_output`, selectedOutput);
+  }, [selectedOutput]);
   
   const [levels, setLevels] = useState({ input: 0, output: 0 });
-  const [params, setParams] = useState<EffectParams>(DEFAULT_PARAMS);
+  const [params, setParams] = useState<EffectParams>(() => {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      try {
+        return { ...DEFAULT_PARAMS, ...JSON.parse(saved) };
+      } catch (e) {
+        console.error("Failed to parse saved params", e);
+      }
+    }
+    return DEFAULT_PARAMS;
+  });
   const [lang, setLang] = useState<LangCode>('ko');
+
+  // Save params to localStorage when changed
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(params));
+  }, [params]);
 
   const refreshDevices = useCallback(async () => {
     try {
