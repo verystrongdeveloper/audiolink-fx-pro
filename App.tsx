@@ -12,7 +12,8 @@ const DEFAULT_PARAMS: EffectParams = {
   reverbDecay: 2.0,
   delayTime: 0.3,
   delayFeedback: 0.3,
-  delayMix: 0.0
+  delayMix: 0.0,
+  isMuted: false
 };
 
 // Decorative Screw Component
@@ -127,13 +128,17 @@ const App: React.FC = () => {
     }
   }, [selectedOutput, engineStarted]);
 
-  const updateParam = useCallback((key: keyof EffectParams, val: number) => {
+  const updateParam = useCallback((key: keyof EffectParams, val: number | boolean) => {
     setParams(prev => {
       const newParams = { ...prev, [key]: val };
       audioEngine.updateParameters(newParams);
       return newParams;
     });
   }, []);
+
+  const toggleMute = () => {
+    updateParam('isMuted', !params.isMuted);
+  };
 
   if (!engineStarted) {
     return (
@@ -235,8 +240,30 @@ const App: React.FC = () => {
             </div>
             
             {/* Master Gains */}
-            <div className="mt-8 pt-6 border-t border-slate-800/50 flex justify-around">
+            <div className="mt-8 pt-6 border-t border-slate-800/50 flex items-center justify-around">
                <Knob label="Input Trim" value={params.inputGain} min={0} max={2} onChange={(v) => updateParam('inputGain', v)} color="#64748b" />
+               
+               <div className="flex flex-col items-center gap-2">
+                 <button 
+                   onClick={toggleMute}
+                   className={`w-10 h-10 rounded-full border-2 flex items-center justify-center transition-all shadow-lg active:scale-90 ${
+                     params.isMuted 
+                       ? 'bg-red-600 border-red-400 text-white shadow-[0_0_15px_rgba(220,38,38,0.5)]' 
+                       : 'bg-slate-800 border-slate-600 text-slate-400 hover:border-slate-400'
+                   }`}
+                   title={params.isMuted ? "Unmute" : "Mute"}
+                 >
+                   {params.isMuted ? (
+                     <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM12.293 7.293a1 1 0 011.414 0L15 8.586l1.293-1.293a1 1 0 111.414 1.414L16.414 10l1.293 1.293a1 1 0 01-1.414 1.414L15 11.414l-1.293 1.293a1 1 0 01-1.414-1.414L13.586 10l-1.293-1.293a1 1 0 010-1.414z" clipRule="evenodd" /></svg>
+                   ) : (
+                     <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM14.657 2.929a1 1 0 011.414 0A9.972 9.972 0 0119 10a9.972 9.972 0 01-2.929 7.071 1 1 0 01-1.414-1.414A7.971 7.971 0 0017 10c0-2.21-.894-4.208-2.343-5.657a1 1 0 010-1.414zm-2.829 2.828a1 1 0 011.415 0A5.983 5.983 0 0115 10a5.983 5.983 0 01-1.414 4.243 1 1 0 11-1.415-1.415A3.987 3.987 0 0013 10a3.987 3.987 0 00-1.414-2.829 1 1 0 010-1.415z" clipRule="evenodd" /></svg>
+                   )}
+                 </button>
+                 <span className={`text-[9px] font-bold uppercase tracking-widest ${params.isMuted ? 'text-red-500' : 'text-slate-500'}`}>
+                   {params.isMuted ? 'Muted' : 'Mute'}
+                 </span>
+               </div>
+
                <div className="w-px h-16 bg-gradient-to-b from-transparent via-slate-700 to-transparent"></div>
                <Knob label="Master Vol" value={params.masterGain} min={0} max={2} onChange={(v) => updateParam('masterGain', v)} color="#f59e0b" />
             </div>

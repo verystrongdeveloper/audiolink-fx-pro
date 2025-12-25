@@ -161,7 +161,10 @@ class AudioEngine {
     // Smooth transition to prevent clicks when changing values
     // Using 0.05 time constant ensures parameters "slide" to the new value
     this.inputGain?.gain.setTargetAtTime(params.inputGain, now, 0.05);
-    this.masterGain?.gain.setTargetAtTime(params.masterGain, now, 0.05);
+    
+    const targetMasterGain = params.isMuted ? 0 : params.masterGain;
+    this.masterGain?.gain.setTargetAtTime(targetMasterGain, now, 0.05);
+
     this.reverbGain?.gain.setTargetAtTime(params.reverbMix, now, 0.05);
     this.delayNode?.delayTime.setTargetAtTime(params.delayTime, now, 0.05);
     this.delayFeedback?.gain.setTargetAtTime(params.delayFeedback, now, 0.05);

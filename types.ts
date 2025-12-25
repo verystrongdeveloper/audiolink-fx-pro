@@ -12,6 +12,7 @@ export interface EffectParams {
   delayMix: number; // 0 to 1
   masterGain: number; // 0 to 2
   inputGain: number; // 0 to 2
+  isMuted: boolean;
 }
 
 // Extend HTMLMediaElement to support setSinkId (experimental feature in some TS libs)
