@@ -112,6 +112,7 @@ class AudioEngine {
     this.delayFeedback.connect(this.delayNode);
     this.delayNode.connect(this.delayWetGain);
     this.delayWetGain.connect(this.masterGain);
+    this.delayWetGain.connect(this.convolver);
 
     this.masterGain.connect(this.outputAnalyzer);
     
