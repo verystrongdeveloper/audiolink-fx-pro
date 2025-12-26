@@ -31,6 +31,43 @@ const Screw: React.FC<{ className?: string }> = ({ className }) => (
   </div>
 );
 
+// Modal Component
+const Modal: React.FC<{ 
+  isOpen: boolean; 
+  onClose: () => void; 
+  title: string; 
+  children: React.ReactNode 
+}> = ({ isOpen, onClose, title, children }) => {
+  if (!isOpen) return null;
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose}></div>
+      <div className="bg-[#0f172a] border border-slate-800 w-full max-w-2xl max-h-[80vh] overflow-hidden rounded-sm shadow-2xl relative z-10 flex flex-col">
+        <div className="p-4 border-b border-slate-800 flex justify-between items-center bg-slate-900/50">
+          <h3 className="text-sm font-black font-tech text-white uppercase tracking-widest flex items-center gap-2">
+            <span className="w-1.5 h-1.5 bg-blue-500 rounded-full"></span>
+            {title}
+          </h3>
+          <button onClick={onClose} className="text-slate-500 hover:text-white transition-colors">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"/></svg>
+          </button>
+        </div>
+        <div className="p-6 overflow-y-auto text-slate-400 text-sm leading-relaxed custom-scrollbar">
+          {children}
+        </div>
+        <div className="p-4 border-t border-slate-800 bg-slate-900/30 text-right">
+          <button 
+            onClick={onClose}
+            className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px] font-bold rounded-sm border border-slate-700 uppercase tracking-widest transition-all"
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 type LangCode = 'ko' | 'en' | 'ja';
 
 const TROUBLESHOOTING_TEXT = {
@@ -86,6 +123,7 @@ const App: React.FC = () => {
   const [inputs, setInputs] = useState<AudioDevice[]>([]);
   const [outputs, setOutputs] = useState<AudioDevice[]>([]);
   
+  const [modalType, setModalType] = useState<'privacy' | 'terms' | 'contact' | null>(null);
   const [selectedInput, setSelectedInput] = useState<string>(() => {
     return localStorage.getItem(`${DEVICE_STORAGE_KEY}_input`) || '';
   });
@@ -320,7 +358,10 @@ const App: React.FC = () => {
                     </div>
                     <div>
                       <h3 className="text-[11px] font-bold text-white uppercase tracking-wider mb-1">Privacy Guaranteed</h3>
-                      <p className="text-[11px] text-slate-500 leading-relaxed">Audio never leaves your device. We use standard browser local storage to save your custom presets.</p>
+                      <p className="text-[11px] text-slate-500 leading-relaxed">
+                        Audio never leaves your device. We use standard browser local storage to save your custom presets. See the{' '}
+                        <a className="text-slate-300 hover:text-white transition-colors" href="/privacy.html">Privacy Policy</a>.
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -358,12 +399,60 @@ const App: React.FC = () => {
                <span>Built with Web Audio API</span>
              </div>
              <div className="flex gap-6 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
-               <a href="#" className="hover:text-blue-500 transition-colors">Privacy</a>
-               <a href="#" className="hover:text-blue-500 transition-colors">Terms</a>
-               <a href="#" className="hover:text-blue-500 transition-colors">Contact</a>
+               <button onClick={() => setModalType('privacy')} className="hover:text-blue-500 transition-colors">Privacy</button>
+               <button onClick={() => setModalType('terms')} className="hover:text-blue-500 transition-colors">Terms</button>
+               <button onClick={() => setModalType('contact')} className="hover:text-blue-500 transition-colors">Contact</button>
              </div>
           </footer>
         </div>
+
+        {/* Modals */}
+        <Modal 
+          isOpen={modalType === 'privacy'} 
+          onClose={() => setModalType(null)} 
+          title="Privacy Policy"
+        >
+          <div className="space-y-4">
+            <p className="text-blue-400 font-bold uppercase text-xs tracking-widest">Your Privacy Matters</p>
+            <p>AudioLink FX Pro values your privacy. This service <b>processes all audio locally</b> within your browser and does not transmit any audio data to our servers.</p>
+            <h4 className="text-white font-bold mt-4">1. Data Collection</h4>
+            <p>We do not collect or store any audio files or microphone input. All configuration values (FX parameters, etc.) are stored exclusively in your browser's LocalStorage.</p>
+            <h4 className="text-white font-bold">2. Cookies and Advertising</h4>
+            <p>This site uses Google AdSense to display advertisements. Google may use cookies to serve ads based on your prior visits to this or other websites.</p>
+          </div>
+        </Modal>
+
+        <Modal 
+          isOpen={modalType === 'terms'} 
+          onClose={() => setModalType(null)} 
+          title="Terms of Service"
+        >
+          <div className="space-y-4">
+            <p className="text-purple-400 font-bold uppercase text-xs tracking-widest">Usage Agreement</p>
+            <p>By using AudioLink FX Pro, you agree to the following terms and conditions.</p>
+            <h4 className="text-white font-bold mt-4">1. Service Usage</h4>
+            <p>This service is a browser-based audio processing tool. Users must use the service for lawful purposes only.</p>
+            <h4 className="text-white font-bold">2. Disclaimer</h4>
+            <p>The service is provided "as is," and we are not responsible for any audio quality issues or system errors that may occur during its use.</p>
+          </div>
+        </Modal>
+
+        <Modal 
+          isOpen={modalType === 'contact'} 
+          onClose={() => setModalType(null)} 
+          title="Contact Support"
+        >
+          <div className="space-y-6 text-center py-4">
+            <div className="w-16 h-16 bg-blue-900/20 rounded-full flex items-center justify-center mx-auto mb-4 border border-blue-800/30">
+              <svg className="w-8 h-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+            </div>
+            <h4 className="text-white font-bold">Get in Touch</h4>
+            <p className="text-sm">If you have any questions or feedback, please contact us at the email address below.</p>
+            <div className="bg-slate-900 border border-slate-800 p-4 rounded-sm inline-block">
+              <p className="text-blue-400 font-mono text-lg">kys006417@gmail.com</p>
+            </div>
+          </div>
+        </Modal>
       </div>
     );
   }
@@ -620,7 +709,8 @@ const App: React.FC = () => {
                 <h3 className="text-slate-500 font-bold uppercase text-[11px] tracking-widest mb-2">Privacy & Local Processing</h3>
                 <p className="text-[11px] text-slate-500 italic">
                   AudioLink FX Pro processes all audio locally on your machine. No audio data is ever sent to our servers. 
-                  This site uses Google AdSense and associated cookies for advertising and analytics purposes.
+                  This site uses Google AdSense and associated cookies for advertising and analytics purposes. 
+                  See the <a className="text-slate-300 hover:text-white transition-colors" href="/privacy.html">Privacy Policy</a>.
                 </p>
               </div>
               <div className="text-[11px] text-slate-600">
@@ -638,10 +728,15 @@ const App: React.FC = () => {
             </details>
           </section>
 
-          <footer className="flex justify-between items-center text-[9px] font-mono text-slate-600 border-t border-slate-900 pt-6 mt-4">
-             <div className="flex gap-4">
+          <footer className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 text-[9px] font-mono text-slate-600 border-t border-slate-900 pt-6 mt-4">
+             <div className="flex flex-wrap gap-4">
                <span className="flex items-center gap-1"><span className="w-1 h-1 bg-green-500 rounded-full"></span> SYSTEM ONLINE</span>
                <span className="flex items-center gap-1"><span className="w-1 h-1 bg-green-500 rounded-full"></span> 48000Hz LOCKED</span>
+             </div>
+             <div className="flex gap-4">
+               <a className="hover:text-slate-300 transition-colors" href="/privacy.html">Privacy</a>
+               <a className="hover:text-slate-300 transition-colors" href="/terms.html">Terms</a>
+               <a className="hover:text-slate-300 transition-colors" href="/contact.html">Contact</a>
              </div>
              <span className="text-slate-700">AudioLink FX Pro v1.2.0 build 2024</span>
           </footer>
