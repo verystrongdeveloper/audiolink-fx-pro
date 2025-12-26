@@ -19,6 +19,9 @@ const DEFAULT_PARAMS: EffectParams = {
 
 const STORAGE_KEY = 'audiolink_fx_params';
 const DEVICE_STORAGE_KEY = 'audiolink_fx_devices';
+const AD_CLIENT_ID = 'ca-pub-3082216745798697';
+const AD_SLOT_ID = 'YOUR_AD_SLOT_ID';
+const HAS_VALID_AD_SLOT = AD_SLOT_ID && AD_SLOT_ID !== 'YOUR_AD_SLOT_ID';
 
 // Decorative Screw Component
 const Screw: React.FC<{ className?: string }> = ({ className }) => (
@@ -59,6 +62,24 @@ const TROUBLESHOOTING_TEXT = {
     ]
   }
 };
+
+const AdUnit: React.FC = () => (
+  <div className="bg-[#131b2e] p-4 rounded-sm border border-slate-800 shadow-xl overflow-hidden min-h-[90px] flex items-center justify-center relative">
+    <div className="absolute top-1 left-2 text-[8px] font-bold text-slate-700 uppercase tracking-tighter">Advertisement</div>
+    {HAS_VALID_AD_SLOT ? (
+      <ins
+        className="adsbygoogle"
+        style={{ display: 'block' }}
+        data-ad-client={AD_CLIENT_ID}
+        data-ad-slot={AD_SLOT_ID}
+        data-ad-format="auto"
+        data-full-width-responsive="true"
+      ></ins>
+    ) : (
+      <span className="text-[10px] text-slate-600 font-mono italic">Set your AdSense slot ID in App.tsx to show ads.</span>
+    )}
+  </div>
+);
 
 const App: React.FC = () => {
   const [engineStarted, setEngineStarted] = useState(false);
@@ -210,24 +231,138 @@ const App: React.FC = () => {
 
   if (!engineStarted) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#050505] text-white p-6 relative overflow-hidden">
-        {/* Background Grid */}
-        <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'linear-gradient(#333 1px, transparent 1px), linear-gradient(90deg, #333 1px, transparent 1px)', backgroundSize: '40px 40px' }}></div>
+      <div className="min-h-screen flex items-center justify-center bg-[#02040a] text-white p-6 relative overflow-hidden">
+        {/* Background Decorative Elements */}
+        <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'linear-gradient(#333 1px, transparent 1px), linear-gradient(90deg, #333 1px, transparent 1px)', backgroundSize: '60px 60px' }}></div>
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-blue-900/10 rounded-full blur-[160px] animate-pulse-slow"></div>
+        <div className="scanline"></div>
         
-        <div className="max-w-md w-full bg-slate-900/90 backdrop-blur-md p-10 rounded-sm border border-slate-800 shadow-2xl text-center space-y-8 relative z-10">
-          <div className="w-24 h-24 bg-gradient-to-br from-blue-900 to-slate-900 rounded-full flex items-center justify-center mx-auto border-4 border-slate-800 shadow-[0_0_20px_rgba(59,130,246,0.3)]">
-            <svg className="w-10 h-10 text-blue-500" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM14.657 2.929a1 1 0 011.414 0A9.972 9.972 0 0119 10a9.972 9.972 0 01-2.929 7.071 1 1 0 01-1.414-1.414A7.971 7.971 0 0017 10c0-2.21-.894-4.208-2.343-5.657a1 1 0 010-1.414zm-2.829 2.828a1 1 0 011.415 0A5.983 5.983 0 0115 10a5.983 5.983 0 01-1.414 4.243 1 1 0 11-1.415-1.415A3.987 3.987 0 0013 10a3.987 3.987 0 00-1.414-2.829 1 1 0 010-1.415z" clipRule="evenodd" /></svg>
+        <div className="max-w-4xl w-full relative z-10 space-y-8">
+          {/* Main Hero Card */}
+          <div className="bg-slate-900/40 backdrop-blur-xl rounded-sm border border-slate-800/50 shadow-[0_0_50px_rgba(0,0,0,0.5)] relative overflow-hidden group">
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-blue-500/50 to-transparent"></div>
+            
+            <div className="grid grid-cols-1 lg:grid-cols-2">
+              {/* Left Side: Branding & CTA */}
+              <div className="p-10 lg:p-14 border-b lg:border-b-0 lg:border-r border-slate-800/50 flex flex-col justify-center relative">
+                <Screw className="top-3 left-3 opacity-30" />
+                <Screw className="bottom-3 left-3 opacity-30" />
+                
+                <div className="relative mb-8">
+                  <h1 className="text-6xl font-black font-tech tracking-tighter text-white italic leading-none">
+                    AudioLink <span className="text-blue-500 drop-shadow-[0_0_20px_rgba(59,130,246,0.5)]">FX</span>
+                  </h1>
+                  <p className="text-slate-500 text-[10px] font-bold uppercase tracking-[0.4em] mt-4 flex items-center gap-2">
+                    <span className="w-8 h-px bg-slate-800"></span>
+                    Professional DSP Rack
+                  </p>
+                </div>
+
+                <div className="space-y-6 mb-10">
+                  <p className="text-slate-400 text-sm leading-relaxed max-w-sm">
+                    Professional low-latency real-time audio processing in your browser. Apply studio-grade effects to your microphone for streaming and recording.
+                  </p>
+                  
+                  <div className="flex gap-4">
+                    <div className="px-3 py-1 bg-blue-900/20 border border-blue-800/30 rounded-full text-[9px] font-bold text-blue-400 uppercase tracking-widest">Low Latency</div>
+                    <div className="px-3 py-1 bg-purple-900/20 border border-purple-800/30 rounded-full text-[9px] font-bold text-purple-400 uppercase tracking-widest">48kHz Pro</div>
+                  </div>
+                </div>
+
+                <button 
+                  onClick={handleStartEngine}
+                  className="group relative w-full overflow-hidden rounded-sm"
+                >
+                  <div className="absolute inset-0 bg-blue-600 transition-transform duration-300 group-hover:scale-105"></div>
+                  <div className="relative py-5 flex items-center justify-center gap-3 border-b-4 border-blue-800 active:border-b-0 active:translate-y-1 transition-all">
+                    <span className="text-white font-black uppercase tracking-[0.25em] text-sm">Initialize System</span>
+                    <svg className="w-5 h-5 text-blue-200 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                  </div>
+                </button>
+              </div>
+
+              {/* Right Side: Features/Info */}
+              <div className="p-10 lg:p-14 bg-black/20 relative">
+                <Screw className="top-3 right-3 opacity-30" />
+                <Screw className="bottom-3 right-3 opacity-30" />
+                
+                <h2 className="text-xs font-black font-tech text-slate-400 uppercase tracking-widest mb-8 flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 bg-blue-500 rounded-full shadow-[0_0_8px_#3b82f6]"></span>
+                  Engine Specifications
+                </h2>
+
+                <div className="space-y-8">
+                  <div className="flex gap-4">
+                    <div className="w-10 h-10 rounded bg-slate-800/50 flex items-center justify-center shrink-0 border border-slate-700/50">
+                      <svg className="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/></svg>
+                    </div>
+                    <div>
+                      <h3 className="text-[11px] font-bold text-white uppercase tracking-wider mb-1">Pure Browser Power</h3>
+                      <p className="text-[11px] text-slate-500 leading-relaxed">No installation required. Everything runs locally via Web Audio API for maximum privacy and performance.</p>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-4">
+                    <div className="w-10 h-10 rounded bg-slate-800/50 flex items-center justify-center shrink-0 border border-slate-700/50">
+                      <svg className="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>
+                    </div>
+                    <div>
+                      <h3 className="text-[11px] font-bold text-white uppercase tracking-wider mb-1">Studio FX Chain</h3>
+                      <p className="text-[11px] text-slate-500 leading-relaxed">High-fidelity Plate Reverb and Digital Delay with precise parameter controls and real-time monitoring.</p>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-4">
+                    <div className="w-10 h-10 rounded bg-slate-800/50 flex items-center justify-center shrink-0 border border-slate-700/50">
+                      <svg className="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                    </div>
+                    <div>
+                      <h3 className="text-[11px] font-bold text-white uppercase tracking-wider mb-1">Privacy Guaranteed</h3>
+                      <p className="text-[11px] text-slate-500 leading-relaxed">Audio never leaves your device. We use standard browser local storage to save your custom presets.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
-          <div>
-            <h1 className="text-4xl font-black font-tech tracking-tight text-white">AudioLink <span className="text-blue-500">FX</span></h1>
-            <p className="text-slate-400 text-sm mt-2 font-mono">VIRTUAL ROUTING DSP ENGINE</p>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="bg-[#131b2e]/50 border border-slate-800/50 p-6 rounded-sm backdrop-blur-sm relative">
+               <Screw className="top-2 left-2 opacity-20 scale-75" />
+               <Screw className="top-2 right-2 opacity-20 scale-75" />
+               <h3 className="text-[10px] font-bold text-blue-400 uppercase tracking-[0.2em] mb-4">Quick Start Guide</h3>
+               <ul className="text-[11px] text-slate-500 space-y-3">
+                 <li className="flex gap-3"><span className="text-blue-500 font-bold">01.</span> Initialize the engine and grant mic access.</li>
+                 <li className="flex gap-3"><span className="text-blue-500 font-bold">02.</span> Select your physical input and virtual output (e.g., Cable Input).</li>
+                 <li className="flex gap-3"><span className="text-blue-500 font-bold">03.</span> Adjust your FX and route to OBS/Discord.</li>
+               </ul>
+            </div>
+            <div className="bg-[#1a1313]/50 border border-red-900/20 p-6 rounded-sm backdrop-blur-sm relative">
+               <Screw className="top-2 left-2 opacity-20 scale-75" />
+               <Screw className="top-2 right-2 opacity-20 scale-75" />
+               <h3 className="text-[10px] font-bold text-red-400 uppercase tracking-[0.2em] mb-4">System Requirements</h3>
+               <ul className="text-[11px] text-slate-500 space-y-3">
+                 <li className="flex gap-3"><span className="text-red-500/50">•</span> Chromium-based browser (Chrome, Edge, etc.)</li>
+                 <li className="flex gap-3"><span className="text-red-500/50">•</span> 48000Hz system sample rate (Recommended)</li>
+                 <li className="flex gap-3"><span className="text-red-500/50">•</span> VB-Audio Virtual Cable (For routing)</li>
+               </ul>
+            </div>
           </div>
-          <button 
-            onClick={handleStartEngine}
-            className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 rounded transition-all shadow-lg active:scale-95 uppercase tracking-widest text-xs border-b-4 border-blue-800"
-          >
-            Initialize System
-          </button>
+
+          <footer className="pt-8 border-t border-slate-900 flex flex-col md:flex-row justify-between items-center gap-6 opacity-50">
+             <div className="text-[10px] font-mono text-slate-600 uppercase tracking-widest flex items-center gap-4">
+               <span>Ver 1.2.0</span>
+               <span className="w-1 h-1 bg-slate-800 rounded-full"></span>
+               <span>Built with Web Audio API</span>
+             </div>
+             <div className="flex gap-6 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+               <a href="#" className="hover:text-blue-500 transition-colors">Privacy</a>
+               <a href="#" className="hover:text-blue-500 transition-colors">Terms</a>
+               <a href="#" className="hover:text-blue-500 transition-colors">Contact</a>
+             </div>
+          </footer>
         </div>
       </div>
     );
@@ -446,17 +581,7 @@ const App: React.FC = () => {
             </div>
           </div>
 
-          <div className="bg-[#131b2e] p-4 rounded-sm border border-slate-800 shadow-xl overflow-hidden min-h-[90px] flex items-center justify-center relative">
-            <div className="absolute top-1 left-2 text-[8px] font-bold text-slate-700 uppercase tracking-tighter">Advertisement</div>
-            {/* Google AdSense Unit */}
-            <ins className="adsbygoogle"
-                 style={{ display: 'block' }}
-                 data-ad-client="ca-pub-3082216745798697"
-                 data-ad-slot="YOUR_AD_SLOT_ID"
-                 data-ad-format="auto"
-                 data-full-width-responsive="true"></ins>
-            <span className="text-[10px] text-slate-600 font-mono italic">Ad Slot Placeholder</span>
-          </div>
+          <AdUnit />
 
           {/* About & Technical Info (Added for AdSense & SEO) */}
           <section className="bg-slate-900/40 border border-slate-800 p-8 rounded-sm text-slate-400 space-y-6 text-sm leading-relaxed font-sans">
