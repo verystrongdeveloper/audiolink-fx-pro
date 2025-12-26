@@ -10,6 +10,7 @@ class AudioEngine {
   
   private inputGain: GainNode | null = null;
   private masterGain: GainNode | null = null;
+  private mainOutputGain: GainNode | null = null;
   private inputAnalyzer: AnalyserNode | null = null;
   private outputAnalyzer: AnalyserNode | null = null;
   
@@ -24,6 +25,8 @@ class AudioEngine {
   private monitorAudioElement: AudioOutputElement | null = null;
 
   private isInitialized = false;
+  private isMonitoringViaContext = true;
+  private monitoringEnabled = false;
 
   constructor() {
     this.outputAudioElement = new Audio() as AudioOutputElement;
@@ -33,6 +36,7 @@ class AudioEngine {
 
     this.monitorAudioElement = new Audio() as AudioOutputElement;
     this.monitorAudioElement.autoplay = true;
+    this.monitorAudioElement.muted = true; // Ensure it starts muted
     this.monitorAudioElement.style.display = 'none';
   }
 
@@ -56,6 +60,9 @@ class AudioEngine {
 
     this.masterGain = this.context.createGain();
     this.masterGain.gain.value = 0; 
+
+    this.mainOutputGain = this.context.createGain();
+    this.mainOutputGain.gain.value = 1.0;
     
     this.inputAnalyzer = this.context.createAnalyser();
     this.outputAnalyzer = this.context.createAnalyser();
@@ -85,6 +92,7 @@ class AudioEngine {
       sampleRate: this.context.sampleRate,
     });
     this.monitorGain = this.monitorContext.createGain();
+    this.monitorGain.gain.value = 0; // Start muted
     this.monitorGain.connect(this.monitorContext.destination);
     
     // Connect Main DSP to Monitor Context
@@ -107,8 +115,8 @@ class AudioEngine {
 
     this.masterGain.connect(this.outputAnalyzer);
     
-    // Low Latency Path: Connect directly to hardware destination
-    this.outputAnalyzer.connect(this.context.destination);
+    // Low Latency Path: Connect to main output gain
+    this.outputAnalyzer.connect(this.mainOutputGain);
 
     // Legacy/Monitoring Path: Connect to MediaStream for secondary devices
     this.outputAnalyzer.connect(this.destinationNode);
@@ -160,19 +168,22 @@ class AudioEngine {
   }
 
   async setOutputDevice(deviceId: string) {
-    if (!this.context) return;
+    if (!this.context || !this.mainOutputGain) return;
     
     try {
       // 1. Try modern AudioContext.setSinkId (Lowest Latency)
       if ('setSinkId' in this.context && typeof (this.context as any).setSinkId === 'function') {
         await (this.context as any).setSinkId(deviceId);
+        this.mainOutputGain.disconnect(); // Prevent duplicate connections
+        this.mainOutputGain.connect(this.context.destination);
         console.log(`Main output (Context) routed to: ${deviceId}`);
-        this.outputAudioElement!.muted = true; // Ensure legacy element is silent
+        if (this.outputAudioElement) this.outputAudioElement.muted = true; // Ensure legacy element is silent
         return;
       }
 
       // 2. Fallback to HTMLAudioElement (Legacy Latency)
       if (this.outputAudioElement) {
+        this.mainOutputGain.disconnect(); // Prevent audio from going to default context destination
         this.outputAudioElement.muted = false; 
         if ('setSinkId' in this.outputAudioElement) {
           await this.outputAudioElement.setSinkId(deviceId);
@@ -193,32 +204,40 @@ class AudioEngine {
       if ('setSinkId' in this.monitorContext && typeof (this.monitorContext as any).setSinkId === 'function') {
         await (this.monitorContext as any).setSinkId(deviceId);
         console.log(`Monitor routed (Direct Context) to: ${deviceId}`);
+        this.isMonitoringViaContext = true;
         if (this.monitorAudioElement) this.monitorAudioElement.muted = true;
-        return;
-      }
-
-      // 2. Fallback to HTMLAudioElement
-      if (this.monitorAudioElement) {
-        this.monitorAudioElement.muted = false;
-        if ('setSinkId' in this.monitorAudioElement) {
-          await this.monitorAudioElement.setSinkId(deviceId);
-          console.log(`Monitor routed (Legacy Audio) to: ${deviceId}`);
+      } else {
+        // 2. Fallback to HTMLAudioElement
+        if (this.monitorAudioElement) {
+          this.isMonitoringViaContext = false;
+          // Note: We don't unmute here, setMonitoringEnabled will handle it
+          if ('setSinkId' in this.monitorAudioElement) {
+            await this.monitorAudioElement.setSinkId(deviceId);
+            console.log(`Monitor routed (Legacy Audio) to: ${deviceId}`);
+          }
         }
       }
+      
+      // Re-apply monitoring enabled state with the new routing method
+      this.setMonitoringEnabled(this.monitoringEnabled);
+
     } catch (e) {
       console.error("setMonitoringDevice failed", e);
     }
   }
 
   setMonitoringEnabled(enabled: boolean) {
+    this.monitoringEnabled = enabled;
     if (this.monitorGain) {
       // Use gain instead of HTMLAudioElement.muted for faster response
       const now = this.monitorContext?.currentTime || 0;
-      this.monitorGain.gain.setTargetAtTime(enabled ? 1 : 0, now, 0.01);
+      // Only set gain if using context-based monitoring
+      this.monitorGain.gain.setTargetAtTime(enabled && this.isMonitoringViaContext ? 1 : 0, now, 0.01);
     }
     
     if (this.monitorAudioElement) {
-      this.monitorAudioElement.muted = !enabled;
+      // Only unmute if NOT using context-based monitoring
+      this.monitorAudioElement.muted = !enabled || this.isMonitoringViaContext;
     }
   }
 
