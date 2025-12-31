@@ -4,11 +4,14 @@ class AudioEngine {
   public context: AudioContext | null = null;
   public monitorContext: AudioContext | null = null;
   private inputStream: MediaStream | null = null;
+  private inputStream2: MediaStream | null = null;
   private sourceNode: MediaStreamAudioSourceNode | null = null;
+  private sourceNode2: MediaStreamAudioSourceNode | null = null;
   private monitorSourceNode: MediaStreamAudioSourceNode | null = null;
   private monitorGain: GainNode | null = null;
   
   private inputGain: GainNode | null = null;
+  private inputGain2: GainNode | null = null;
   private masterGain: GainNode | null = null;
   private mainOutputGain: GainNode | null = null;
   private inputAnalyzer: AnalyserNode | null = null;
@@ -58,6 +61,12 @@ class AudioEngine {
     this.inputGain.channelCountMode = 'explicit';
     this.inputGain.channelInterpretation = 'speakers';
 
+    this.inputGain2 = this.context.createGain();
+    this.inputGain2.gain.value = 0;
+    this.inputGain2.channelCount = 1;
+    this.inputGain2.channelCountMode = 'explicit';
+    this.inputGain2.channelInterpretation = 'speakers';
+
     this.masterGain = this.context.createGain();
     this.masterGain.gain.value = 0; 
 
@@ -104,6 +113,15 @@ class AudioEngine {
     this.inputGain.connect(this.masterGain);
 
     this.inputGain.connect(this.convolver);
+    
+    // Input 2 Connections (Mix)
+    if (this.inputGain2) {
+      this.inputGain2.connect(this.inputAnalyzer);
+      this.inputGain2.connect(this.masterGain);
+      this.inputGain2.connect(this.convolver);
+      this.inputGain2.connect(this.delayNode);
+    }
+
     this.convolver.connect(this.reverbGain);
     this.reverbGain.connect(this.masterGain);
 
@@ -164,6 +182,40 @@ class AudioEngine {
       await this.resume();
     } catch (err) {
       console.error("Input setup failed:", err);
+      throw err;
+    }
+  }
+
+  async setInputDevice2(deviceId: string) {
+    if (!deviceId) {
+      // If deviceId is empty, disconnect and stop
+      if (this.sourceNode2) this.sourceNode2.disconnect();
+      if (this.inputStream2) this.inputStream2.getTracks().forEach(t => t.stop());
+      this.sourceNode2 = null;
+      this.inputStream2 = null;
+      return;
+    }
+
+    if (!this.context) await this.init();
+    
+    if (this.sourceNode2) this.sourceNode2.disconnect();
+    if (this.inputStream2) this.inputStream2.getTracks().forEach(t => t.stop());
+
+    try {
+      this.inputStream2 = await navigator.mediaDevices.getUserMedia({
+        audio: { 
+          deviceId: { exact: deviceId }, 
+          echoCancellation: false, 
+          noiseSuppression: false, 
+          autoGainControl: false 
+        }
+      });
+
+      this.sourceNode2 = this.context!.createMediaStreamSource(this.inputStream2);
+      this.sourceNode2.connect(this.inputGain2!);
+      await this.resume();
+    } catch (err) {
+      console.error("Input 2 setup failed:", err);
       throw err;
     }
   }
@@ -268,6 +320,7 @@ class AudioEngine {
     // Smooth transition to prevent clicks when changing values
     // Using 0.05 time constant ensures parameters "slide" to the new value
     this.inputGain?.gain.setTargetAtTime(params.inputGain, now, 0.05);
+    this.inputGain2?.gain.setTargetAtTime(params.inputGain2 ?? 0, now, 0.05);
     
     const targetMasterGain = params.isMuted ? 0 : params.masterGain;
     this.masterGain?.gain.setTargetAtTime(targetMasterGain, now, 0.05);

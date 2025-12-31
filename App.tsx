@@ -7,6 +7,7 @@ import LevelMeter from './components/LevelMeter';
 
 const DEFAULT_PARAMS: EffectParams = {
   inputGain: 1.0,
+  inputGain2: 1.0,
   masterGain: 1.0,
   reverbMix: 0.0,
   reverbDecay: 2.0,
@@ -127,6 +128,9 @@ const App: React.FC = () => {
   const [selectedInput, setSelectedInput] = useState<string>(() => {
     return localStorage.getItem(`${DEVICE_STORAGE_KEY}_input`) || '';
   });
+  const [selectedInput2, setSelectedInput2] = useState<string>(() => {
+    return localStorage.getItem(`${DEVICE_STORAGE_KEY}_input2`) || '';
+  });
   const [selectedOutput, setSelectedOutput] = useState<string>(() => {
     return localStorage.getItem(`${DEVICE_STORAGE_KEY}_output`) || '';
   });
@@ -139,6 +143,11 @@ const App: React.FC = () => {
   useEffect(() => {
     if (selectedInput) localStorage.setItem(`${DEVICE_STORAGE_KEY}_input`, selectedInput);
   }, [selectedInput]);
+
+  useEffect(() => {
+    if (selectedInput2) localStorage.setItem(`${DEVICE_STORAGE_KEY}_input2`, selectedInput2);
+    else localStorage.removeItem(`${DEVICE_STORAGE_KEY}_input2`);
+  }, [selectedInput2]);
 
   useEffect(() => {
     if (selectedOutput) localStorage.setItem(`${DEVICE_STORAGE_KEY}_output`, selectedOutput);
@@ -227,6 +236,13 @@ const App: React.FC = () => {
       audioEngine.setInputDevice(selectedInput).catch(e => setErrorMsg(e.message));
     }
   }, [selectedInput, engineStarted]);
+
+  useEffect(() => {
+    if (engineStarted) {
+      // Allow empty string to disconnect input 2
+      audioEngine.setInputDevice2(selectedInput2).catch(e => console.error("Input 2 error", e));
+    }
+  }, [selectedInput2, engineStarted]);
 
   useEffect(() => {
     if (selectedOutput && engineStarted) {
@@ -503,9 +519,9 @@ const App: React.FC = () => {
             
             <div className="space-y-6">
               <div className="flex gap-4 items-center bg-black/40 p-3 rounded border border-slate-800/50">
-                <LevelMeter level={levels.input} label="IN" />
+                <LevelMeter level={levels.input} label="IN 1" />
                 <div className="flex-1 min-w-0">
-                  <label className="block text-[9px] text-blue-400 mb-1.5 font-bold uppercase tracking-wider">Source</label>
+                  <label className="block text-[9px] text-blue-400 mb-1.5 font-bold uppercase tracking-wider">Source 1</label>
                   <select 
                     className="w-full bg-[#0a0a0a] border border-slate-800 rounded-sm px-2 py-2 text-xs focus:ring-1 focus:ring-blue-500 outline-none text-slate-300 font-mono truncate"
                     value={selectedInput}
@@ -514,6 +530,44 @@ const App: React.FC = () => {
                     {inputs.map(d => <option key={d.deviceId} value={d.deviceId}>{d.label}</option>)}
                   </select>
                 </div>
+              </div>
+
+              {/* Input 2 Section */}
+              <div className="space-y-3 pt-2">
+                <div className="flex items-center justify-between px-1">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                    <span className={`w-1.5 h-1.5 rounded-full transition-all ${selectedInput2 ? 'bg-cyan-500 shadow-[0_0_8px_#06b6d4]' : 'bg-slate-700'}`}></span>
+                    Aux Input
+                  </span>
+                  <button 
+                    onClick={() => setSelectedInput2(prev => prev ? '' : (inputs.length > 0 ? inputs[0].deviceId : ''))}
+                    className={`relative inline-flex h-5 w-10 items-center rounded-full transition-colors focus:outline-none ${selectedInput2 ? 'bg-cyan-600' : 'bg-slate-700'}`}
+                  >
+                    <span className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${selectedInput2 ? 'translate-x-6' : 'translate-x-1'}`} />
+                  </button>
+                </div>
+
+                {selectedInput2 && (
+                  <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                    <div className="flex gap-4 items-center bg-cyan-900/10 p-3 rounded border border-cyan-900/30">
+                      <div className="flex-1 min-w-0">
+                        <label className="block text-[9px] text-cyan-400 mb-1.5 font-bold uppercase tracking-wider">Source 2</label>
+                        <select 
+                          className="w-full bg-[#0a0a0a] border border-cyan-900/50 rounded-sm px-2 py-2 text-xs focus:ring-1 focus:ring-cyan-500 outline-none text-slate-300 font-mono truncate"
+                          value={selectedInput2}
+                          onChange={(e) => setSelectedInput2(e.target.value)}
+                        >
+                          <option value="">(Select Device)</option>
+                          {inputs.map(d => <option key={d.deviceId} value={d.deviceId}>{d.label}</option>)}
+                        </select>
+                      </div>
+                    </div>
+                    
+                    <div className="flex justify-center bg-cyan-900/10 p-3 rounded border border-cyan-900/30">
+                       <Knob label="Aux Trim" value={params.inputGain2 ?? 1.0} min={0} max={2} onChange={(v) => updateParam('inputGain2', v)} color="#22d3ee" />
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="flex gap-4 items-center bg-black/40 p-3 rounded border border-slate-800/50">
