@@ -1,4 +1,4 @@
-import { EffectParams, AudioOutputElement } from '../types';
+import { EffectParams, AudioOutputElement, InputChannelMode } from '../types';
 
 class AudioEngine {
   public context: AudioContext | null = null;
@@ -12,6 +12,10 @@ class AudioEngine {
   
   private inputGain: GainNode | null = null;
   private inputGain2: GainNode | null = null;
+  private panner: StereoPannerNode | null = null;
+  private panner2: StereoPannerNode | null = null;
+  private inputSplitter: ChannelSplitterNode | null = null;
+  private inputSplitter2: ChannelSplitterNode | null = null;
   private masterGain: GainNode | null = null;
   private mainOutputGain: GainNode | null = null;
   private inputAnalyzer: AnalyserNode | null = null;
@@ -30,6 +34,8 @@ class AudioEngine {
   private isInitialized = false;
   private isMonitoringViaContext = true;
   private monitoringEnabled = false;
+  private inputChannelMode: InputChannelMode = 'mix';
+  private inputChannelMode2: InputChannelMode = 'mix';
 
   constructor() {
     this.outputAudioElement = new Audio() as AudioOutputElement;
@@ -66,6 +72,12 @@ class AudioEngine {
     this.inputGain2.channelCount = 1;
     this.inputGain2.channelCountMode = 'explicit';
     this.inputGain2.channelInterpretation = 'speakers';
+
+    this.panner = this.context.createStereoPanner();
+    this.panner2 = this.context.createStereoPanner();
+
+    this.inputSplitter = this.context.createChannelSplitter(2);
+    this.inputSplitter2 = this.context.createChannelSplitter(2);
 
     this.masterGain = this.context.createGain();
     this.masterGain.gain.value = 0; 
@@ -110,22 +122,28 @@ class AudioEngine {
 
     // 연결 그래프
     this.inputGain.connect(this.inputAnalyzer);
-    this.inputGain.connect(this.masterGain);
-
-    this.inputGain.connect(this.convolver);
     
+    // Pan routing for Input 1
+    if (this.panner) {
+      this.inputGain.connect(this.panner);
+      this.panner.connect(this.masterGain);
+      this.panner.connect(this.convolver);
+      this.panner.connect(this.delayNode);
+    }
+
     // Input 2 Connections (Mix)
-    if (this.inputGain2) {
-      this.inputGain2.connect(this.inputAnalyzer);
-      this.inputGain2.connect(this.masterGain);
-      this.inputGain2.connect(this.convolver);
-      this.inputGain2.connect(this.delayNode);
+    if (this.inputGain2 && this.panner2) {
+      this.inputGain2.connect(this.inputAnalyzer); // Sharing analyzer for simplicity or could be separate
+      this.inputGain2.connect(this.panner2);
+      this.panner2.connect(this.masterGain);
+      this.panner2.connect(this.convolver);
+      this.panner2.connect(this.delayNode);
     }
 
     this.convolver.connect(this.reverbGain);
     this.reverbGain.connect(this.masterGain);
 
-    this.inputGain.connect(this.delayNode);
+    // Delay processing is already fed by panners above
     this.delayNode.connect(this.delayFeedback);
     this.delayFeedback.connect(this.delayNode);
     this.delayNode.connect(this.delayWetGain);
@@ -178,7 +196,7 @@ class AudioEngine {
       });
 
       this.sourceNode = this.context!.createMediaStreamSource(this.inputStream);
-      this.sourceNode.connect(this.inputGain!);
+      this.routeInput(this.sourceNode, this.inputSplitter, this.inputGain, this.inputChannelMode);
       await this.resume();
     } catch (err) {
       console.error("Input setup failed:", err);
@@ -190,6 +208,7 @@ class AudioEngine {
     if (!deviceId) {
       // If deviceId is empty, disconnect and stop
       if (this.sourceNode2) this.sourceNode2.disconnect();
+      if (this.inputSplitter2) this.inputSplitter2.disconnect();
       if (this.inputStream2) this.inputStream2.getTracks().forEach(t => t.stop());
       this.sourceNode2 = null;
       this.inputStream2 = null;
@@ -212,7 +231,7 @@ class AudioEngine {
       });
 
       this.sourceNode2 = this.context!.createMediaStreamSource(this.inputStream2);
-      this.sourceNode2.connect(this.inputGain2!);
+      this.routeInput(this.sourceNode2, this.inputSplitter2, this.inputGain2, this.inputChannelMode2);
       await this.resume();
     } catch (err) {
       console.error("Input 2 setup failed:", err);
@@ -295,6 +314,33 @@ class AudioEngine {
   }
 
   // 테스트 신호 발생 (디버깅용)
+  private routeInput(
+    source: MediaStreamAudioSourceNode | null,
+    splitter: ChannelSplitterNode | null,
+    gain: GainNode | null,
+    mode: InputChannelMode
+  ) {
+    if (!source || !gain) return;
+    try {
+      source.disconnect();
+    } catch {}
+    if (splitter) {
+      try {
+        splitter.disconnect();
+      } catch {}
+    }
+
+    if (mode === 'mix') {
+      source.connect(gain);
+      return;
+    }
+
+    if (!splitter) return;
+    source.connect(splitter);
+    const channelIndex = mode === 'left' ? 0 : 1;
+    splitter.connect(gain, channelIndex, 0);
+  }
+
   playTestTone() {
     if (!this.context || !this.masterGain) return;
     const osc = this.context.createOscillator();
@@ -317,11 +363,24 @@ class AudioEngine {
     if (!this.context) return;
     const now = this.context.currentTime;
     
+    if (params.inputChannelMode !== this.inputChannelMode) {
+      this.inputChannelMode = params.inputChannelMode;
+      this.routeInput(this.sourceNode, this.inputSplitter, this.inputGain, this.inputChannelMode);
+    }
+
+    if (params.inputChannelMode2 !== this.inputChannelMode2) {
+      this.inputChannelMode2 = params.inputChannelMode2;
+      this.routeInput(this.sourceNode2, this.inputSplitter2, this.inputGain2, this.inputChannelMode2);
+    }
+
     // Smooth transition to prevent clicks when changing values
     // Using 0.05 time constant ensures parameters "slide" to the new value
     this.inputGain?.gain.setTargetAtTime(params.inputGain, now, 0.05);
     this.inputGain2?.gain.setTargetAtTime(params.inputGain2 ?? 0, now, 0.05);
     
+    this.panner?.pan.setTargetAtTime(params.inputPan ?? 0, now, 0.05);
+    this.panner2?.pan.setTargetAtTime(params.inputPan2 ?? 0, now, 0.05);
+
     const targetMasterGain = params.isMuted ? 0 : params.masterGain;
     this.masterGain?.gain.setTargetAtTime(targetMasterGain, now, 0.05);
 

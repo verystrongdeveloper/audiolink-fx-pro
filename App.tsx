@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { AudioDevice, EffectParams } from './types';
+import { AudioDevice, EffectParams, InputChannelMode } from './types';
 import { audioEngine } from './services/audioEngine';
 import Knob from './components/Knob';
 import Visualizer from './components/Visualizer';
@@ -8,6 +8,10 @@ import LevelMeter from './components/LevelMeter';
 const DEFAULT_PARAMS: EffectParams = {
   inputGain: 1.0,
   inputGain2: 1.0,
+  inputPan: 0.0,
+  inputPan2: 0.0,
+  inputChannelMode: 'mix',
+  inputChannelMode2: 'mix',
   masterGain: 1.0,
   reverbMix: 0.0,
   reverbDecay: 2.0,
@@ -23,6 +27,11 @@ const DEVICE_STORAGE_KEY = 'audiolink_fx_devices';
 const AD_CLIENT_ID = 'ca-pub-3082216745798697';
 const AD_SLOT_ID = 'YOUR_AD_SLOT_ID';
 const HAS_VALID_AD_SLOT = AD_SLOT_ID && AD_SLOT_ID !== 'YOUR_AD_SLOT_ID';
+const CHANNEL_MODE_OPTIONS: { value: InputChannelMode; label: string }[] = [
+  { value: 'mix', label: 'Mix (L+R)' },
+  { value: 'left', label: 'Left (1)' },
+  { value: 'right', label: 'Right (2)' }
+];
 
 // Decorative Screw Component
 const Screw: React.FC<{ className?: string }> = ({ className }) => (
@@ -262,7 +271,7 @@ const App: React.FC = () => {
     }
   }, [params.monitoringEnabled, engineStarted]);
 
-  const updateParam = useCallback((key: keyof EffectParams, val: number | boolean) => {
+  const updateParam = useCallback(<K extends keyof EffectParams>(key: K, val: EffectParams[K]) => {
     setParams(prev => {
       const newParams = { ...prev, [key]: val };
       audioEngine.updateParameters(newParams);
@@ -529,6 +538,18 @@ const App: React.FC = () => {
                   >
                     {inputs.map(d => <option key={d.deviceId} value={d.deviceId}>{d.label}</option>)}
                   </select>
+                  <div className="mt-2">
+                    <label className="block text-[9px] text-blue-400 mb-1.5 font-bold uppercase tracking-wider">Channel</label>
+                    <select
+                      className="w-full bg-[#0a0a0a] border border-slate-800 rounded-sm px-2 py-2 text-xs focus:ring-1 focus:ring-blue-500 outline-none text-slate-300 font-mono"
+                      value={params.inputChannelMode}
+                      onChange={(e) => updateParam('inputChannelMode', e.target.value as InputChannelMode)}
+                    >
+                      {CHANNEL_MODE_OPTIONS.map(option => (
+                        <option key={option.value} value={option.value}>{option.label}</option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
               </div>
 
@@ -560,11 +581,24 @@ const App: React.FC = () => {
                           <option value="">(Select Device)</option>
                           {inputs.map(d => <option key={d.deviceId} value={d.deviceId}>{d.label}</option>)}
                         </select>
+                        <div className="mt-2">
+                          <label className="block text-[9px] text-cyan-400 mb-1.5 font-bold uppercase tracking-wider">Channel</label>
+                          <select
+                            className="w-full bg-[#0a0a0a] border border-cyan-900/50 rounded-sm px-2 py-2 text-xs focus:ring-1 focus:ring-cyan-500 outline-none text-slate-300 font-mono"
+                            value={params.inputChannelMode2}
+                            onChange={(e) => updateParam('inputChannelMode2', e.target.value as InputChannelMode)}
+                          >
+                            {CHANNEL_MODE_OPTIONS.map(option => (
+                              <option key={option.value} value={option.value}>{option.label}</option>
+                            ))}
+                          </select>
+                        </div>
                       </div>
                     </div>
                     
-                    <div className="flex justify-center bg-cyan-900/10 p-3 rounded border border-cyan-900/30">
+                    <div className="flex justify-center bg-cyan-900/10 p-3 rounded border border-cyan-900/30 gap-4">
                        <Knob label="Aux Trim" value={params.inputGain2 ?? 1.0} min={0} max={2} onChange={(v) => updateParam('inputGain2', v)} color="#22d3ee" />
+                       <Knob label="Aux Pan" value={params.inputPan2 ?? 0} min={-1} max={1} onChange={(v) => updateParam('inputPan2', v)} format={v => v === 0 ? 'C' : (v < 0 ? `L${Math.round(Math.abs(v)*100)}` : `R${Math.round(v*100)}`)} color="#22d3ee" />
                     </div>
                   </div>
                 )}
@@ -619,6 +653,7 @@ const App: React.FC = () => {
             {/* Master Gains */}
             <div className="mt-8 pt-6 border-t border-slate-800/50 flex items-center justify-around">
                <Knob label="Input Trim" value={params.inputGain} min={0} max={2} onChange={(v) => updateParam('inputGain', v)} color="#64748b" />
+               <Knob label="Input Pan" value={params.inputPan ?? 0} min={-1} max={1} onChange={(v) => updateParam('inputPan', v)} format={v => v === 0 ? 'C' : (v < 0 ? `L${Math.round(Math.abs(v)*100)}` : `R${Math.round(v*100)}`)} color="#64748b" />
                
                <div className="flex flex-col items-center gap-2">
                  <button 

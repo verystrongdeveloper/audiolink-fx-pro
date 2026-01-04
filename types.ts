@@ -4,6 +4,8 @@ export interface AudioDevice {
   kind: MediaDeviceKind;
 }
 
+export type InputChannelMode = 'left' | 'right' | 'mix';
+
 export interface EffectParams {
   reverbMix: number; // 0 to 1
   reverbDecay: number; // 0 to 10
@@ -13,6 +15,10 @@ export interface EffectParams {
   masterGain: number; // 0 to 2
   inputGain: number; // 0 to 2
   inputGain2: number; // 0 to 2
+  inputPan: number; // -1 to 1
+  inputPan2: number; // -1 to 1
+  inputChannelMode: InputChannelMode;
+  inputChannelMode2: InputChannelMode;
   isMuted: boolean;
   monitoringEnabled: boolean;
 }
