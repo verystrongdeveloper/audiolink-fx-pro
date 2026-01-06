@@ -33,7 +33,59 @@
      crossorigin="anonymous"></script>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <main class="min-h-screen bg-[#02040a] text-slate-100">
+        <section class="max-w-4xl mx-auto px-6 py-16 space-y-10">
+          <header class="space-y-4">
+            <p class="text-[11px] uppercase tracking-[0.35em] text-slate-500">Browser Audio DSP</p>
+            <h1 class="text-4xl md:text-5xl font-tech font-black italic">AudioLink FX Pro</h1>
+            <p class="text-slate-400 text-sm leading-relaxed">
+              AudioLink FX Pro is a real-time audio processing tool that runs entirely in your browser. Add
+              professional reverb and delay to your microphone with ultra-low latency, optimized routing,
+              and a studio-style control layout for streamers, podcasters, and creators.
+            </p>
+          </header>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="bg-slate-900/40 border border-slate-800 p-5 rounded-sm space-y-3">
+              <h2 class="text-xs uppercase tracking-widest text-blue-400 font-bold">Core Features</h2>
+              <ul class="list-disc pl-5 text-sm text-slate-400 space-y-2">
+                <li>Real-time DSP with plate reverb and digital delay.</li>
+                <li>Dual input routing, monitoring, and gain staging.</li>
+                <li>Runs locally on your device with no uploads.</li>
+              </ul>
+            </div>
+            <div class="bg-slate-900/40 border border-slate-800 p-5 rounded-sm space-y-3">
+              <h2 class="text-xs uppercase tracking-widest text-emerald-400 font-bold">Who It Helps</h2>
+              <ul class="list-disc pl-5 text-sm text-slate-400 space-y-2">
+                <li>Streamers who want broadcast-grade voice polish.</li>
+                <li>Podcasters who need instant monitoring control.</li>
+                <li>Musicians and gamers who need low-latency FX.</li>
+              </ul>
+            </div>
+          </div>
+
+          <section class="bg-slate-900/30 border border-slate-800 p-6 rounded-sm space-y-4">
+            <h2 class="text-xs uppercase tracking-widest text-purple-400 font-bold">How It Works</h2>
+            <p class="text-sm text-slate-400 leading-relaxed">
+              On first launch, allow microphone access so the engine can initialize. Select your input and
+              output devices, then tune reverb, delay, and gain settings in real time. All processing stays
+              on your machine using the Web Audio API to keep latency low and privacy high.
+            </p>
+            <p class="text-sm text-slate-400 leading-relaxed">
+              This site also provides documentation and policies for users. Review the links below for
+              privacy, terms, and support contact details.
+            </p>
+          </section>
+
+          <footer class="text-xs text-slate-500 flex flex-wrap gap-4">
+            <a class="hover:text-slate-300 transition-colors" href="/privacy.html">Privacy Policy</a>
+            <a class="hover:text-slate-300 transition-colors" href="/terms.html">Terms</a>
+            <a class="hover:text-slate-300 transition-colors" href="/contact.html">Contact</a>
+          </footer>
+        </section>
+      </main>
+    </div>
   <script type="module" src="/index.tsx"></script>
 </body>
 </html>
